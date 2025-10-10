@@ -1,0 +1,317 @@
+{
+  "projectName": "JobDM (frontend MVP)",
+  "summary": "Frontend starter instructions for JobDM. Build using Next.js App Router, put UI inside src folder. Use TypeScript. Use NextAuth placeholder for auth; actual backend will be Node/Express and will replace placeholder APIs. Use dummy data files (no hard-coded values). Only implement the five screens listed.",
+  "techStack": {
+    "framework": "Next.js (App Router)",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS recommended (optional: CSS Modules)",
+    "state": "use React context + local state for this MVP (no global state libraries required)",
+    "authPlaceholder": "NextAuth (for UI flow only) - actual auth will be replaced by Node/Express APIs later",
+    "httpClient": "fetch or axios",
+    "forms": "react-hook-form (recommended) or controlled components",
+    "icons": "lucide-react or react-icons (optional)"
+  },
+  "highLevelInstructions": [
+    "Create `src` folder inside `app` folder and put all UI code there.",
+    "All UI components must import data from dedicated dummy data files in `src/data` — do NOT hardcode strings or lists in components.",
+    "Make screens responsive: mobile-first. Support breakpoints: mobile (<=640px), tablet (641-1024px), desktop (>=1025px).",
+    "Do not add any screens or features beyond the five specified (Login, Register, Profile with tabs, Home, Pricing).",
+    "Use TypeScript for all files (`.tsx`, `.ts`).",
+    "When backend APIs are ready, swap dummy-data calls to real API calls using the same data shapes described below."
+  ],
+  "folderStructure": {
+    "root": "src",
+    "structure": {
+      "app": {
+        "layout.tsx": "Top-level App Router layout (imports global CSS)",
+        "page.tsx": "Root landing (redirect to /dashboard or /login depending on auth placeholder)"
+      },
+      "src": {
+        "ui": {
+          "components": "All reusable components (Buttons, Inputs, Tabs, Modal, Form elements)",
+          "screens": "Screen components (LoginScreen.tsx, RegisterScreen.tsx, ProfileScreen.tsx, DashBoardScreen.tsx, PricingScreen.tsx)",
+          "layout": "App specific layout components (Header, Footer, Sidebar if needed)"
+        },
+        "data": "Dummy JSON/TS files that export arrays/objects (users.ts, hrContacts.ts, campaigns.ts, plans.ts)",
+        "lib": "utility functions (formatters, validators, smtpTestStub)",
+        "hooks": "custom hooks (useAuthPlaceholder, useFormHelpers)",
+        "styles": "global tailwind config or css files",
+        "types": "TypeScript type definitions (User, Campaign, Plan, Recipient)"
+      }
+    }
+  },
+  "Theme": {
+    "colors": {
+      "primary": {
+        "blue": "#2563EB",
+        "teal": "#14B8A6",
+        "mint": "#2DD4BF",
+        "cyan": "#06B6D4"
+      },
+      "secondary": {
+        "purple": "#8B5CF6",
+        "pink": "#EC4899",
+        "orange": "#F97316"
+      },
+      "neutral": {
+        "background": "#F9FAFB",
+        "card": "#FFFFFF",
+        "border": "#E5E7EB",
+        "textPrimary": "#111827",
+        "textSecondary": "#6B7280",
+        "textTertiary": "#9CA3AF"
+      },
+      "status": {
+        "success": "#22C55E",
+        "warning": "#FACC15",
+        "error": "#EF4444",
+        "info": "#0EA5E9"
+      }
+    },
+    "screenInstructions": {
+      "LandingScreen": "Use light background (#F9FAFB), hero section with primary blue/teal accents, CTA buttons in blue/teal, feature cards in white with soft shadow.",
+      "DashBoardScreen": "Use card backgrounds in white (#FFFFFF), headers in primary blue (#2563EB), accent actions in teal (#14B8A6), status badges with status colors.",
+      "Forms": "Input borders in neutral border (#E5E7EB), focus state in primary blue (#2563EB), button backgrounds in primary mint or cyan for a fresh feel.",
+      "Buttons": "Primary actions in blue (#2563EB), secondary actions in teal/mint (#14B8A6 / #2DD4BF), hover slightly darker or with soft shadow.",
+      "Alerts & Badges": "Success green (#22C55E), warning yellow (#FACC15), error red (#EF4444), info cyan (#0EA5E9). Keep them subtle but clear."
+    }
+  },
+  "types": {
+    "User": {
+      "fields": {
+        "_id": "string",
+        "fullName": "string | null",
+        "email": "string",
+        "contactNo": "string | null",
+        "gender": "\"male\" | \"female\" | \"other\" | null",
+        "type": "\"hr\" | \"employee\"",
+        "authStatus": "\"authorized\" | \"unauthorized\"",
+        "smtpCredentials": "{ email?: string; appPasswordEncrypted?: string } | null",
+        "technicalInfo": "{ roleLookingFor?: string; skills?: string[]; totalExperience?: number }",
+        "professionalInfo": "{ currentCompany?: string; companyEmail?: string; linkedIn?: string; portfolio?: string; resumeLink?: string }",
+        "subscription": "{ coins: number; plan?: string } | null",
+        "profileCompletion": "number (0-100)"
+      }
+    },
+    "Campaign": {
+      "fields": {
+        "_id": "string",
+        "userId": "string",
+        "type": "\"employee_to_hr\" | \"employee_to_employee\" | \"hr_to_employee\"",
+        "filters": "{ role?: string; skills?: string[]; city?: string }",
+        "recipients": "string[] (user ids from users data)",
+        "emailTemplates": "[ { subject: string; body: string; resumeLink?: string; followUp?: string } ]",
+        "options": "{ dailyLimit?: number; followUps?: boolean }",
+        "status": "\"running\" | \"paused\" | \"completed\"",
+        "sentCount": "number"
+      }
+    },
+    "Plan": {
+      "fields": {
+        "id": "string",
+        "label": "string",
+        "priceINR": "number",
+        "coins": "number",
+        "description": "string"
+      }
+    }
+  },
+  "dataFilesWithExamples": {
+    "src/data/users.ts": "export const users: User[] = [ { _id: 'u1', fullName: 'Vinayak Dhaybar', email: 'vinayak@example.com', contactNo: '+91-9876543210', gender: 'male', type: 'employee', authStatus: 'authorized', smtpCredentials: { email: 'vinayak@example.com', appPasswordEncrypted: '' }, technicalInfo: { roleLookingFor: 'Frontend Engineer', skills: ['React', 'TypeScript'], totalExperience: 2 }, professionalInfo: { currentCompany: 'ABC Pvt Ltd', companyEmail: 'hr@abc.com', linkedIn: 'https://linkedin.com/in/vinayak' }, subscription: { coins: 20, plan: 'free' }, profileCompletion: 80 } ];",
+    "src/data/hrContacts.ts": "export const hrContacts = [ { _id: 'hr1', fullName: 'Priya Sharma', email: 'priya.hr@tcs.com', designation: 'Recruiter', company: 'TCS', domain: 'IT', city: 'Bengaluru', verified: true }, { _id: 'hr2', fullName: 'Amit Singh', email: 'amit.recruit@xyz.com', designation: 'HR Manager', company: 'XYZ', domain: 'FinTech', city: 'Pune', verified: false } ];",
+    "src/data/campaigns.ts": "export const campaigns = [ { _id: 'c1', userId: 'u1', type: 'employee_to_hr', filters: { role: 'Frontend Engineer', skills: ['React'], city: 'Bengaluru' }, recipients: ['hr1'], emailTemplates: [ { subject: 'Application for {role} role', body: 'Hi {name}, I am {fullName}...', resumeLink: 'https://drive.google.com/..', followUp: 'Hi {name}, just checking in...' } ], options: { dailyLimit: 20, followUps: true }, status: 'running', sentCount: 12 } ];",
+    "src/data/plans.ts": "export const plans = [ { id: 'free', label: 'Free Trial', priceINR: 0, coins: 20, description: 'Joining bonus - 20 coins' }, { id: 'pack50', label: '50 Coins', priceINR: 50, coins: 50, description: '₹50 for 50 coins' }, { id: 'pack100', label: '120 Coins', priceINR: 100, coins: 120, description: '₹100 for 120 coins' }, { id: 'pack150', label: '180 Coins', priceINR: 150, coins: 180, description: '₹150 for 180 coins' } ];"
+  },
+  "screensDetailed": {
+    "LandingScreen": {
+      "purpose": "Introductory landing page with platform overview, features, testimonials, pricing, FAQs, and footer.",
+      "route": "/",
+      "sections": {
+        "Hero Section": [
+          "Title: 'JobDM – Simplifying Referrals for Job Seekers'",
+          "Subtitle: 'Request referrals from top-tier professionals directly and effortlessly.'",
+          "Call-to-Action: 'Sign In' button linking to /auth/login or /auth/register",
+          "Background/Illustration: relevant hero image or illustration"
+        ],
+        "Features Section": [
+          "Feature 1: 'Personalized Referral Emails' - craft custom emails to professionals",
+          "Feature 2: 'Verified Professional Database' - filter by domain, location, and companies",
+          "Feature 3: 'Automated Outreach' - send referral requests efficiently without manual effort",
+          "Feature 4: 'Track Responses' - monitor referral status from dashboard"
+        ],
+        "Testimonials Section": [
+          "Testimonial 1: 'JobDM helped me get multiple referrals in a week!' – User A",
+          "Testimonial 2: 'As an HR, I can manage requests easily and respond timely.' – HR B",
+          "Testimonial 3: 'The automated email system saves a lot of time.' – User C"
+        ],
+        "Pricing Section": [
+          "Option 1: 'Flexible' - pay per active user/month (₹99 per user)",
+          "Option 2: 'Fixed' - flat monthly fee (₹9000/month)",
+          "CTA: 'Get Started' button linking to /auth/register"
+        ],
+        "FAQ Section": [
+          "Q1: How does JobDM work?",
+          "A1: Users register, craft referral emails, filter professionals, and send requests automatically.",
+          "Q2: Can I manage multiple campaigns?",
+          "A2: Yes, the dashboard allows multiple campaigns, scheduling, and tracking.",
+          "Q3: Is my data secure?",
+          "A3: Yes, user data is encrypted and stored securely with limited access."
+        ],
+        "Footer Section": [
+          "Links: About, Features, Pricing, FAQ, Contact",
+          "Social Media: LinkedIn, Twitter, Instagram",
+          "Copyright: '© 2025 JobDM. All rights reserved.'"
+        ]
+      },
+      "behavior": [
+        "When visiting landing page, show hero section with CTA.",
+        "Sign In button redirects user to /auth/login or /auth/register.",
+        "Once user signs in, redirect to /dashboard (DashBoardScreen).",
+        "All other sections are static informational content; no actions required from frontend except for CTA buttons."
+      ]
+    },
+    "LoginScreen": {
+      "purpose": "Allow existing users to sign in securely (placeholder NextAuth flow).",
+      "route": "/login",
+      "components": [
+        "Logo + app name",
+        "Form: email (type=email), password (type=password)",
+        "Buttons: Login, Forgot Password? (routes to /forgot - implement as placeholder), Register (link to /register)"
+      ],
+      "behavior": [
+        "On submit: call placeholder API '/api/auth/login' which returns an 'authorized' user object from src/data/users.ts for matching email. Do not hardcode responses in component.",
+        "Show form validation errors (required, invalid email, password min length 6).",
+        "On success redirect to /dashboard."
+      ],
+      "demoAuth": {
+        "username": "abcD@gmail.com",
+        "password": "abcD@gmail.com"
+      }
+    },
+    "RegisterScreen": {
+      "purpose": "Allow new users to create an account, then go to Profile.",
+      "route": "/register",
+      "components": [
+        "Form: email, password, confirmPassword",
+        "Buttons: Register, Link -> Login"
+      ],
+      "behavior": [
+        "On submit: validate password equality and email format.",
+        "Call placeholder API '/api/auth/register' which adds/returns a user from src/data/users.ts (simulate and store in local state only).",
+        "After success, redirect to /profile (ProfileScreen)."
+      ]
+    },
+    "ProfileScreen": {
+      "purpose": "Central place for user info, subscriptions and settings. Use tabs.",
+      "route": "/profile",
+      "tabs": {
+        "Personal Info": [
+          "fullName (text)",
+          "email (text, non-editable)",
+          "contactNo (text)",
+          "gender (select)",
+          "smtpCredentials: email (text), appPassword (password)",
+          "Button: Test SMTP Connection (calls placeholder src/lib/smtpTestStub to return success/failure)"
+        ],
+        "Technical Info": [
+          "roleLookingFor (text)",
+          "skills (multi-select or tag input; import options from src/data/skills.ts dummy file)",
+          "totalExperience (number)"
+        ],
+        "Professional Info": [
+          "currentCompany (text)",
+          "companyEmail (text)",
+          "linkedIn (url)",
+          "portfolio (url)",
+          "resumeLink (url)"
+        ],
+        "Subscription & Settings": [
+          "profileCompletion (progress bar computed from required fields)",
+          "currentSubscription (show coins from user data)",
+          "Upgrade button -> navigates to /pricing",
+          "Change Password (simple form, boolean stub), Logout (clears placeholder auth state)"
+        ]
+      },
+      "behavior": [
+        "Pull user object from src/data/users.ts (or from auth placeholder).",
+        "All form defaults populated from that user object.",
+        "On save: write into a local stub service (lib) that updates the dummy data store in-memory (not persistent).",
+        "Do NOT connect to real SMTP in frontend; Test SMTP should call a stub that simulates success if appPassword non-empty."
+      ]
+    },
+    "DashBoardScreen": {
+      "purpose": "Campaign builder and recent campaigns list.",
+      "route": "/dashboard",
+      "sections": {
+        "Campaign Builder": [
+          "Target Audience (radio/select): 'HR' or 'Employees'",
+          "Filters (multi-select): roleLookingFor (free text suggestions), skills (multi-select from src/data/skills.ts), city (free text or select from src/data/cities.ts)",
+          "Email Setup (repeatable 3 templates): each template has subject, body, resume link, followUp text (for after 3 days). Provide preview button.",
+          "Campaign Options: dailyLimit (number), followUps (boolean), CRUD actions (create, update, delete) for campaigns",
+          "Action button: 'Start Campaign' which creates a campaign object and deducts coins locally from user.subscription.coins (simulate)."
+        ],
+        "Recent Campaigns": [
+          "List campaigns from src/data/campaigns.ts (filter by current userId). Show status (running/paused/completed) and sentCount.",
+          "Each campaign row: View (preview), Edit (opens builder with data), Pause/Resume, Delete."
+        ]
+      },
+      "behavior": [
+        "When creating a campaign, validate: at least one template present, dailyLimit > 0, recipients are resolved via filter from src/data/users.ts and src/data/hrContacts.ts (use dummy resolver lib).",
+        "When starting a campaign, subtract coins equal to total recipients (1 coin per recipient) from the local user object; if insufficient coins show error and link to /pricing.",
+        "Do not actually send emails from frontend — sending will be performed by backend later. The frontend should only create the campaign object."
+      ]
+    },
+    "PricingScreen": {
+      "purpose": "Show coin packs and purchase flow placeholder.",
+      "route": "/pricing",
+      "components": [
+        "Top: show current coin balance (from user data)",
+        "Plans: show packs from src/data/plans.ts (Free trial + 3 paid packs)",
+        "Each plan has Buy Now button -> triggers placeholder payment flow that on success increases user.subscription.coins locally and creates a local transaction record in-memory."
+      ],
+      "behavior": [
+        "Simulate payment success instantly via stub. No integration with actual Razorpay/Stripe in frontend MVP.",
+        "After simulated buy, update user object and show success toast."
+      ]
+    }
+  },
+  "uiGuidelines": {
+    "formValidation": "Use client-side validation for required fields and show inline errors. Email format validation, password min 6, confirmPassword equality.",
+    "accessibility": "Use semantic HTML, label every form input, and ensure keyboard navigation.",
+    "noHardcode": "All selectable options (skills list, cities, templates) must come from files in src/data (imports).",
+    "previewFeature": "When previewing template, show merged placeholders using user's public fields (fullName, roleLookingFor).",
+    "profileCompletion": "Compute % based on presence of these fields: fullName (20%), contactNo (15%), technicalInfo.roleLookingFor (20%), skills (15%), professionalInfo.currentCompany or resumeLink (15%), smtpCredentials.email (15%)."
+  },
+  "responsiveness": {
+    "breakpoints": {
+      "mobile": 0,
+      "tablet": 641,
+      "desktop": 1025
+    },
+    "layoutNotes": [
+      "Mobile: single-column forms, 1-column campaign builder, collapsible sections",
+      "Tablet: 2-column layout where appropriate (form + preview)",
+      "Desktop: campaign builder + recent campaigns side-by-side"
+    ]
+  },
+  "validationRules": {
+    "login": "email required, password required",
+    "register": "email required, password required (min 6), confirmPassword must match",
+    "profile": "email non-editable, fullName required to consider profile partially complete",
+    "campaign": "at least one template with subject+body, dailyLimit positive number, recipients resolved from dummy data"
+  },
+  "acceptanceCriteria": [
+    "All five screens implemented and routable under /login /register /profile /home /pricing",
+    "All UI text/data comes from src/data/* files and not hardcoded inside components",
+    "Creating a campaign updates in-memory campaigns list and deducts coins locally; insufficient coins prevents campaign creation",
+    "Profile Test SMTP runs stub and returns success/failure; no external SMTP connection attempted",
+    "Responsive behavior verified on mobile/tablet/desktop breakpoints",
+    "TypeScript types used for all major entities and components"
+  ],
+  "deliverablesSuggestion": [
+    "Implement components in this order: data files -> types -> ui/components -> screens -> placeholder API routes -> wiring and navigation",
+    "Keep dummy data update functions in src/lib/inMemoryStore.ts so later it can be swapped with real API calls",
+    "Write short README.md describing how to replace placeholder endpoints with real Node/Express endpoints"
+  ],
+  "finalNotes": "Do not add any extra screens or features beyond what is specified. Keep it minimal and swap stubs for real backend implementations later. This JSON includes all required shapes and flows to get the frontend MVP implemented quickly."
+}
