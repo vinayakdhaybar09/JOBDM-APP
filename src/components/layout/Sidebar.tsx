@@ -1,13 +1,16 @@
 import React from "react";
 // Add Lucide icons if available
-import { Briefcase, User, DollarSign, LogOut, LayoutDashboard } from "lucide-react";
+import { Briefcase, User, DollarSign, LogOut, LayoutDashboard, Settings } from "lucide-react";
 
-export type SidebarOption = "dashboard" | "campaigns" | "profile" | "pricing";
+export type SidebarOption = "dashboard" | "campaigns" | "profile" | "pricing" | "settings";
 
 interface SidebarProps {
   active: SidebarOption;
   onSelect: (option: SidebarOption) => void;
   onLogout: () => void;
+  hideLogo?: boolean;
+  variant?: 'desktop' | 'mobile';
+  isOpen?: boolean;
 }
 
 const NAV_ITEMS = [
@@ -15,28 +18,39 @@ const NAV_ITEMS = [
   { label: "Campaigns", key: "campaigns", icon: <Briefcase className="w-5 h-5 mr-3" /> },
   { label: "Profile", key: "profile", icon: <User className="w-5 h-5 mr-3" /> },
   { label: "Pricing", key: "pricing", icon: <DollarSign className="w-5 h-5 mr-3" /> },
+  { label: "Settings", key: "settings", icon: <Settings className="w-5 h-5 mr-3" /> },
 ];
 
-export default function Sidebar({ active, onSelect, onLogout }: SidebarProps) {
+export default function Sidebar({ active, onSelect, onLogout, hideLogo = false, variant = 'desktop', isOpen = true }: SidebarProps & { isOpen?: boolean }) {
   // You can move user/account data props in the future
   const userName = "Vinayak D";
   const userEmail = "vinayakdhaybar09@gmail.com";
   const coins = 20;
   const plan = "Free";
+  
+  const isDesktop = variant === 'desktop';
+  const asideClasses = isDesktop 
+    ? `hidden md:flex flex-col fixed top-0 h-full w-72 bg-secondary-blue rounded-l-3xl shadow-lg z-20 border-r border-border select-none transition-transform duration-300 ${
+        isOpen ? 'left-0' : '-left-72'
+      }`
+    : "flex flex-col h-full w-full select-none";
+  
   return (
-    <aside className="hidden md:flex flex-col fixed top-0 left-0 h-full w-72 bg-secondary-blue rounded-l-3xl shadow-lg z-20 border-r border-border select-none">
+    <aside className={asideClasses}>
       {/* Logo row */}
-      <div className="flex items-center gap-4 px-7 h-24 border-b border-border">
-        <div className="bg-primary-orange rounded-xl p-3 flex items-center justify-center">
-          <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
+      {!hideLogo && (
+        <div className="flex items-center gap-4 px-7 h-24 border-b border-border">
+          <div className="bg-primary-orange rounded-xl p-3 flex items-center justify-center">
+            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-text-primary tracking-tight">JobDM</div>
+            <div className="text-xs text-text-secondary mt-0.5">Referrals, Made Simple</div>
+          </div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-text-primary tracking-tight">JobDM</div>
-          <div className="text-xs text-text-secondary mt-0.5">Referrals, Made Simple</div>
-        </div>
-      </div>
+      )}
 
       {/* Navigation */}
       <div className="flex-1 flex flex-col px-2 pt-8">
