@@ -1,27 +1,37 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Sidebar, { SidebarOption } from "@/components/layout/Sidebar";
+import { usePathname, useRouter } from "next/navigation";
+
+function getActiveFromPath(pathname: string | null): SidebarOption {
+  if (!pathname) return "dashboard";
+  if (pathname.startsWith("/dashboard/campaigns")) return "campaigns";
+  if (pathname.startsWith("/dashboard/profile")) return "profile";
+  if (pathname.startsWith("/dashboard/pricing")) return "pricing";
+  // default to dashboard for /dashboard or unknown subpaths
+  if (pathname.startsWith("/dashboard")) return "dashboard";
+  return "dashboard";
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [section, setSection] = useState<SidebarOption>("dashboard");
-  // Navigation between tabs will be handled by the sidebar, but children are rendered by next routing
-  // So page components should be rendered by route (e.g., /dashboard, /dashboard/profile, etc.), not by setSection.
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const active = getActiveFromPath(pathname);
 
   return (
     <div className="min-h-screen bg-background md:pl-72 flex">
       <Sidebar
-        active={section}
+        active={active}
         onSelect={(section) => {
-          setSection(section);
-          // Navigate via next/router
-          if (section === "dashboard") window.location.href = "/dashboard";
-          if (section === "profile") window.location.href = "/dashboard/profile";
-          if (section === "campaigns") window.location.href = "/dashboard/campaigns";
-          if (section === "pricing") window.location.href = "/dashboard/pricing";
+          // Use router navigation so Next updates pathname and the `active` derived from it
+          if (section === "dashboard") router.push("/dashboard");
+          if (section === "profile") router.push("/dashboard/profile");
+          if (section === "campaigns") router.push("/dashboard/campaigns");
+          if (section === "pricing") router.push("/dashboard/pricing");
         }}
         onLogout={() => {
-          // Trigger logout via next-auth
-          // Should be implemented in the Sidebar onLogout button
+          // Trigger logout via next-auth; leave implementation to auth layer or parent
         }}
       />
       <main className="w-full max-w-5xl mx-auto py-10 px-4 flex flex-col gap-8" style={{ fontFamily: 'var(--font-roboto)' }}>
