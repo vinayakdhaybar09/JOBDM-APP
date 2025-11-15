@@ -1,69 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { signIn, getSession, useSession } from 'next-auth/react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLogin } from '@/lib/hooks/useAuth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { mutate: login, isPending, isSuccess } = useLogin();
 
-  // Redirect to dashboard if user is already logged in
-  useEffect(() => {
-    if (status === 'loading') return; // Still loading
-    if (session) {
+  // Redirect to dashboard on successful login
+  React.useEffect(() => {
+    if (isSuccess) {
       router.push('/dashboard');
+      console.log('Login successful!');
     }
-  }, [session, status, router]);
+  }, [isSuccess, router]);
 
-  // Show loading while checking authentication
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render the form if user is already logged in (they'll be redirected)
-  if (session) {
-    return null;
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError('Invalid email or password');
-      } else {
-        // Check if session was created successfully
-        const session = await getSession();
-        if (session) {
-          router.push('/dashboard');
-        }
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    
+    // Call the login mutation
+    login({ email, password });
   };
 
   return (
@@ -95,13 +55,6 @@ const LoginPage = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Error message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
             {/* Demo credentials info */}
             <div className="bg-secondary-blue border border-primary-orange/20 text-text-primary px-4 py-3 rounded-lg text-sm">
               <p className="font-semibold mb-1">Demo Credentials:</p>
@@ -174,10 +127,10 @@ const LoginPage = () => {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-orange hover:bg-primary-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
