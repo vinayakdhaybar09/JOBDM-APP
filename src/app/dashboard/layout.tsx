@@ -1,10 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar, { SidebarOption } from "@/components/layout/Sidebar";
 import DashboardNavbar from "@/components/layout/DashboardNavbar";
 import MobileDrawer from "@/components/layout/MobileDrawer";
 import { usePathname, useRouter } from "next/navigation";
 import { useLogout } from "@/lib/hooks/useAuth";
+import { useAuthCheck } from "@/lib/hooks/useAuthCheck";
+import { isAuthenticated } from "@/lib/utils/auth";
 
 function getActiveFromPath(pathname: string | null): SidebarOption {
   if (!pathname) return "dashboard";
@@ -23,11 +25,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Default open on desktop
   const { mutate: logout } = useLogout();
+  
+  // Check authentication status
+  const { isAuthenticated: isUserAuthenticated, isLoading: isAuthLoading } = useAuthCheck();
+  const hasToken = isAuthenticated();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    // Only redirect if we're not loading and user is not authenticated
+    if (!isAuthLoading) {
+      // If no token in localStorage, redirect immediately
+      if (!hasToken) {
+        router.push('/login');
+        return;
+      }
+      
+      // If token exists but API call failed (invalid token), redirect
+      if (hasToken && !isUserAuthenticated) {
+        router.push('/login');
+        return;
+      }
+    }
+  }, [hasToken, isUserAuthenticated, isAuthLoading, router]);
 
   const active = getActiveFromPath(pathname);
 
   const handleSelect = (section: SidebarOption) => {
     // Use router navigation so Next updates pathname and the `active` derived from it
+    // Ensure user is authenticated before navigating
+    if (!hasToken || !isUserAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    
     if (section === "dashboard") router.push("/dashboard");
     if (section === "profile") router.push("/dashboard/profile");
     if (section === "campaigns") router.push("/dashboard/campaigns");
@@ -47,6 +77,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setIsSidebarOpen(!isSidebarOpen);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto"></div>
+          <p className="mt-4 text-text-secondary">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard if not authenticated (redirect will happen)
+  if (!hasToken || !isUserAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">

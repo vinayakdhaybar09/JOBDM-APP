@@ -5,7 +5,7 @@
 
 import apiClient from '../client';
 import { AUTH_ENDPOINTS } from '../endpoints';
-import { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, VerifyOTPRequest, VerifyOTPResponse } from '../types';
+import { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, VerifyOTPRequest, VerifyOTPResponse, User } from '../types';
 import { setTokens, removeTokens } from '../tokenManager';
 
 /**
@@ -89,6 +89,23 @@ export const resendOTP = async (email: string): Promise<void> => {
   if (!response.data.success) {
     throw new Error(response.data.message || 'Failed to resend OTP');
   }
+};
+
+/**
+ * Get current authenticated user
+ * GET /api/auth/me
+ * Note: This endpoint requires authentication (Bearer token in header)
+ */
+export const getCurrentUser = async (): Promise<User> => {
+  const response = await apiClient.get<ApiResponse<{ user: User }>>(
+    AUTH_ENDPOINTS.GET_CURRENT_USER
+  );
+
+  if (response.data.success && response.data.data?.user) {
+    return response.data.data.user;
+  }
+
+  throw new Error(response.data.message || 'Failed to get current user');
 };
 
 /**
