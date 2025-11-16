@@ -66,8 +66,19 @@ export interface RegisterRequest {
   gender?: Gender;
 }
 
-// Register Response
+// Register Response (without tokens - OTP verification required)
 export interface RegisterResponse {
+  user: User;
+}
+
+// Verify OTP Request
+export interface VerifyOTPRequest {
+  email: string;
+  otp: string;
+}
+
+// Verify OTP Response
+export interface VerifyOTPResponse {
   user: User;
   tokens: TokenResponse;
 }

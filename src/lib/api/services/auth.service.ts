@@ -5,12 +5,13 @@
 
 import apiClient from '../client';
 import { AUTH_ENDPOINTS } from '../endpoints';
-import { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types';
+import { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, VerifyOTPRequest, VerifyOTPResponse } from '../types';
 import { setTokens, removeTokens } from '../tokenManager';
 
 /**
  * Login user
  * POST /api/auth/login
+ * Note: Tokens are only stored if user's email is verified
  */
 export const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
   const response = await apiClient.post<ApiResponse<LoginResponse>>(
@@ -19,9 +20,15 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
   );
 
   if (response.data.success && response.data.data) {
-    // Store tokens in localStorage
-    const { tokens } = response.data.data;
-    setTokens(tokens.accessToken, tokens.refreshToken);
+    const { tokens, user } = response.data.data;
+    
+    // Only store tokens if email is verified
+    // If not verified, user must verify OTP first
+    if (user.isEmailVerified) {
+      setTokens(tokens.accessToken, tokens.refreshToken);
+    }
+    // If not verified, tokens are returned but not stored
+    // They will be stored after OTP verification
     
     return response.data.data;
   }
@@ -32,6 +39,7 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 /**
  * Register user
  * POST /api/auth/register
+ * Note: Does not return tokens - user must verify OTP first
  */
 export const register = async (userData: RegisterRequest): Promise<RegisterResponse> => {
   const response = await apiClient.post<ApiResponse<RegisterResponse>>(
@@ -40,14 +48,47 @@ export const register = async (userData: RegisterRequest): Promise<RegisterRespo
   );
 
   if (response.data.success && response.data.data) {
-    // Store tokens in localStorage
+    // Do NOT store tokens - they will be returned after OTP verification
+    return response.data.data;
+  }
+
+  throw new Error(response.data.message || 'Registration failed');
+};
+
+/**
+ * Verify OTP
+ * POST /api/auth/verify-otp
+ */
+export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
+  const response = await apiClient.post<ApiResponse<VerifyOTPResponse>>(
+    AUTH_ENDPOINTS.VERIFY_OTP,
+    otpData
+  );
+
+  if (response.data.success && response.data.data) {
+    // Store tokens in localStorage after successful OTP verification
     const { tokens } = response.data.data;
     setTokens(tokens.accessToken, tokens.refreshToken);
     
     return response.data.data;
   }
 
-  throw new Error(response.data.message || 'Registration failed');
+  throw new Error(response.data.message || 'OTP verification failed');
+};
+
+/**
+ * Resend OTP
+ * POST /api/auth/resend-otp
+ */
+export const resendOTP = async (email: string): Promise<void> => {
+  const response = await apiClient.post<ApiResponse<void>>(
+    AUTH_ENDPOINTS.RESEND_OTP,
+    { email }
+  );
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to resend OTP');
+  }
 };
 
 /**
