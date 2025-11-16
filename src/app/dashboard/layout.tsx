@@ -4,6 +4,7 @@ import Sidebar, { SidebarOption } from "@/components/layout/Sidebar";
 import DashboardNavbar from "@/components/layout/DashboardNavbar";
 import MobileDrawer from "@/components/layout/MobileDrawer";
 import { usePathname, useRouter } from "next/navigation";
+import { useLogout } from "@/lib/hooks/useAuth";
 
 function getActiveFromPath(pathname: string | null): SidebarOption {
   if (!pathname) return "dashboard";
@@ -21,6 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Default open on desktop
+  const { mutate: logout } = useLogout();
 
   const active = getActiveFromPath(pathname);
 
@@ -34,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const handleLogout = () => {
-    // Trigger logout via next-auth; leave implementation to auth layer or parent
+    logout();
   };
 
   const handleMenuClick = () => {

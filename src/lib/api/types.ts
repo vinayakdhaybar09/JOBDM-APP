@@ -56,3 +56,19 @@ export interface LoginResponse {
   tokens: TokenResponse;
 }
 
+// Register Request
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  type: 'hr' | 'employee' | 'company';
+  contactNo?: string;
+  gender?: Gender;
+}
+
+// Register Response
+export interface RegisterResponse {
+  user: User;
+  tokens: TokenResponse;
+}
+

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Copy, Check, LogOut, CreditCard, Users, Coins, Link2 } from 'lucide-react';
+import { useLogout } from '@/lib/hooks/useAuth';
 
 // Mock data - replace with actual data from your store/API
 const mockPaymentHistory = [
@@ -19,9 +19,9 @@ const mockReferralStats = {
 };
 
 export default function SettingsScreen() {
-  const { data: session } = useSession();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const { mutate: logout } = useLogout();
 
   const handleCopyLink = async () => {
     try {
@@ -33,8 +33,8 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
+  const handleLogout = () => {
+    logout();
   };
 
   return (

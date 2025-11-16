@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { getAccessToken } from '@/lib/api/tokenManager';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: session, status } = useSession();
   const router = useRouter();
 
   const navigation = [
@@ -16,12 +15,10 @@ const Header = () => {
     { name: 'FAQ', href: '#faq' }
   ];
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
-  };
-
   const handleSignInClick = () => {
-    if (session) {
+    // Check if user has token to determine if logged in
+    const token = getAccessToken();
+    if (token) {
       // User is already logged in, redirect to dashboard
       router.push('/dashboard');
     } else {

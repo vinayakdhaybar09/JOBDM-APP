@@ -1,58 +1,112 @@
 'use client';
 
 import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRegister } from '@/lib/hooks/useAuth';
+import { Gender } from '@/lib/api/types';
 
 const RegisterPage = () => {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [contactNo, setContactNo] = useState('+91');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate: register, isPending, isSuccess } = useRegister();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Redirect to login on successful registration
+  React.useEffect(() => {
+    if (isSuccess) {
+      router.push('/login');
+      console.log('Registration successful!');
+    }
+  }, [isSuccess, router]);
+
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!/\d/.test(pwd)) {
+      return 'Password must contain at least one number';
+    }
+    return null;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
     // Validation
+    if (!fullName.trim()) {
+      setError('Full name is required');
+      return;
+    }
+
+    if (fullName.trim().length < 2 || fullName.trim().length > 100) {
+      setError('Full name must be between 2 and 100 characters');
+      return;
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(fullName.trim())) {
+      setError('Full name can only contain letters and spaces');
+      return;
+    }
+
+    // Validate contact number: must start with +91 and have exactly 10 digits after
+    const phoneNumber = contactNo.trim();
+    if (!phoneNumber) {
+      setError('Contact number is required');
+      return;
+    }
+
+    if (!phoneNumber.startsWith('+91')) {
+      setError('Contact number must start with +91');
+      return;
+    }
+
+    const digitsAfterPrefix = phoneNumber.substring(3);
+    if (!/^\d{10}$/.test(digitsAfterPrefix)) {
+      setError('Contact number must have exactly 10 digits after +91');
+      return;
+    }
+
+    if (!gender) {
+      setError('Gender is required');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      setIsLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsLoading(false);
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
-    try {
-      // For demo purposes, we'll simulate registration
-      // In production, this would create a new user in the database
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      // After successful registration, sign in the user
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+    // Prepare registration data - default type to "employee"
+    const registerData = {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      password,
+      type: 'employee' as const,
+      contactNo: contactNo.trim(),
+      gender: gender as Gender,
+    };
 
-      if (result?.error) {
-        setError('Registration failed. Please try again.');
-      } else {
-        router.push('/profile');
-      }
-    } catch (error) {
-      setError('An error occurred during registration. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Call the register mutation
+    register(registerData);
   };
 
   return (
@@ -91,6 +145,26 @@ const RegisterPage = () => {
               </div>
             )}
 
+            {/* Full Name field */}
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-text-primary">
+                Full Name
+              </label>
+              <div className="mt-1">
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-border rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange sm:text-sm"
+                  placeholder="Enter your full name"
+                />
+              </div>
+            </div>
+
             {/* Email field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-text-primary">
@@ -126,7 +200,7 @@ const RegisterPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-border rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange sm:text-sm"
-                  placeholder="Create a password (min 6 characters)"
+                  placeholder="Create a password (min 8 chars, uppercase, lowercase, number)"
                 />
               </div>
             </div>
@@ -148,6 +222,60 @@ const RegisterPage = () => {
                   className="appearance-none block w-full px-3 py-2 border border-border rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange sm:text-sm"
                   placeholder="Confirm your password"
                 />
+              </div>
+            </div>
+
+            {/* Contact Number field */}
+            <div>
+              <label htmlFor="contactNo" className="block text-sm font-medium text-text-primary">
+                Contact Number
+              </label>
+              <div className="mt-1">
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-border bg-secondary-blue text-text-primary text-sm">
+                    +91
+                  </span>
+                  <input
+                    id="contactNo"
+                    name="contactNo"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    value={contactNo.startsWith('+91') ? contactNo.substring(3) : contactNo}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      if (value.length <= 10) {
+                        setContactNo('+91' + value);
+                      }
+                    }}
+                    maxLength={10}
+                    className="appearance-none block w-full px-3 py-2 border border-border rounded-r-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange sm:text-sm"
+                    placeholder="Enter 10 digit mobile number"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-text-tertiary">Only Indian numbers (+91) are supported</p>
+              </div>
+            </div>
+
+            {/* Gender field */}
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-text-primary">
+                Gender
+              </label>
+              <div className="mt-1">
+                <select
+                  id="gender"
+                  name="gender"
+                  required
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as Gender | '')}
+                  className="appearance-none block w-full px-3 py-2 border border-border rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange sm:text-sm"
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
             </div>
 
@@ -176,10 +304,10 @@ const RegisterPage = () => {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-orange hover:bg-primary-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -194,10 +322,10 @@ const RegisterPage = () => {
             </div>
           </form>
 
-          {/* Back to dashboard */}
+          {/* Back to home */}
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-text-secondary hover:text-primary-orange">
-              ← Back to dashboard
+              ← Back to home
             </Link>
           </div>
         </div>
