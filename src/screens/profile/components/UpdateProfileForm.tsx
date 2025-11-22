@@ -7,10 +7,15 @@ import { useProfile, useUpdateProfile } from '@/lib/hooks/useProfile';
 import { skills as skillOptions } from '@/data/skills';
 import { RadixSelect } from '@/components/ui/RadixSelect';
 import { RadixMultiSelect } from '@/components/ui/RadixMultiSelect';
-import { UpdateProfileRequest } from '@/lib/api/types';
+import { UpdateProfileRequest as BaseUpdateProfileRequest } from '@/lib/api/types';
+
+// Extend the base type to include portfolioUrl
+interface UpdateProfileRequest extends BaseUpdateProfileRequest {
+  portfolioUrl?: string;
+}
 
 export default function UpdateProfileForm() {
-  const { data: user, isLoading: isLoadingProfile } = useProfile();
+  const { data: user, isLoading: isLoadingProfile } = useProfile() as { data: any, isLoading: boolean };
   const updateProfileMutation = useUpdateProfile();
   const router = useRouter();
 
@@ -38,7 +43,7 @@ export default function UpdateProfileForm() {
       currentCompany: '',
       companyEmail: '',
       linkedIn: '',
-      portfolio: '',
+      portfolioUrl: '',
       resumeLink: '',
     },
   });
@@ -50,8 +55,9 @@ export default function UpdateProfileForm() {
       const roleLookingFor = user.preferences?.jobRoles?.[0] || user.technicalInfo?.roleLookingFor || '';
       const skills = user.preferences?.skills || user.technicalInfo?.skills || [];
       const totalExperience = user.preferences?.experience ?? user.technicalInfo?.totalExperience;
-      const linkedIn = user.linkedInUrl || user.professionalInfo?.linkedIn || '';
-      const resumeLink = user.resumeUrl || user.professionalInfo?.resumeLink || '';
+      const linkedIn = user.linkedInUrl || '';
+      const resumeLink = user.resumeUrl || '';
+      const portfolioUrl = user.portfolioUrl || '';
       const currentCompany = user.workExperience?.[0]?.companyName || user.professionalInfo?.currentCompany || '';
       const companyEmail = user.workExperience?.[0]?.yourCompanyEmail || user.professionalInfo?.companyEmail || '';
 
@@ -68,7 +74,7 @@ export default function UpdateProfileForm() {
         currentCompany,
         companyEmail,
         linkedIn,
-        portfolio: user.professionalInfo?.portfolio || '',
+        portfolioUrl,
         resumeLink,
       });
 
@@ -140,6 +146,7 @@ export default function UpdateProfileForm() {
       gender: data.gender || undefined,
       // Map frontend fields to backend
       linkedInUrl: data.linkedIn || undefined,
+      portfolioUrl: data.portfolioUrl || undefined,
       resumeUrl: data.resumeLink || undefined,
       preferences: {
         // Map roleLookingFor (string) to jobRoles (array)
@@ -159,6 +166,8 @@ export default function UpdateProfileForm() {
           ]
         : undefined,
     };
+
+    console.log("updateData123",updateData);
 
     // Call API to update profile
     updateProfileMutation.mutate(updateData);
@@ -226,14 +235,20 @@ export default function UpdateProfileForm() {
             />
           </div>
 
-          {/* Contact Number */}
+          {/* Contact Number - Read Only */}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">
               Contact Number
             </label>
             <input
               type="text"
-              className="mt-1 w-full rounded-lg border border-border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base"
+              className="mt-1 w-full rounded-lg border border-border py-2 px-3 bg-gray-100 text-base cursor-not-allowed"
+              value={watch('contactNo') || ''}
+              readOnly
+              tabIndex={-1}
+            />
+            <input
+              type="hidden"
               {...register('contactNo')}
             />
           </div>
@@ -450,16 +465,17 @@ export default function UpdateProfileForm() {
           </label>
           <input
             type="url"
-            className={`mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary pr-8 ${
-              errors.portfolio ? 'border-red-400' : ''
-            }`}
-            {...register('portfolio', {
-              validate: (value) => !value || isValidUrl(value) || 'Invalid URL format',
-            })}
             placeholder="https://yourportfolio.com"
-            autoComplete="url"
+            defaultValue={user.portfolioUrl || ''}
+            {...register('portfolioUrl', {
+              validate: (value) =>
+                !value || isValidUrl(value) || 'Please enter a valid URL',
+            })}
+            className={`w-full rounded-lg border ${
+              errors.portfolioUrl ? 'border-red-500' : 'border-border'
+            } py-2.5 px-4 pr-10 text-text-primary bg-white focus:ring-2 focus:ring-primary-orange focus:border-transparent`}
           />
-          {watch('portfolio') && isValidUrl(watch('portfolio')) && (
+          {watch('portfolioUrl') && isValidUrl(watch('portfolioUrl')) && (
             <span className="absolute right-3 top-2.5">
               <svg
                 className="w-5 h-5 text-green-500 animate-bounce"
@@ -476,8 +492,8 @@ export default function UpdateProfileForm() {
               </svg>
             </span>
           )}
-          {errors.portfolio && (
-            <p className="text-red-600 text-xs mt-1">{errors.portfolio.message as string}</p>
+          {errors.portfolioUrl && (
+            <p className="text-red-600 text-xs mt-1">{errors.portfolioUrl.message as string}</p>
           )}
         </div>
 

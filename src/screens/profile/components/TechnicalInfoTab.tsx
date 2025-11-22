@@ -1,136 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { getCurrentUser, updateCurrentUser } from '@/lib/inMemoryStore';
-import { skills as skillOptions } from '@/data/skills';
-import { RadixSelect } from '@/components/ui/RadixSelect';
-import { RadixMultiSelect } from '@/components/ui/RadixMultiSelect';
+import React from 'react';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 export default function TechnicalInfoTab() {
-  const user = getCurrentUser();
-  const {
-    register,
-    setValue,
-    getValues,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      roleLookingFor: user.technicalInfo?.roleLookingFor || '',
-      skills: user.technicalInfo?.skills || [],
-      totalExperience: user.technicalInfo?.totalExperience || '',
-    },
-  });
+  const { data: user, isLoading: isLoadingProfile } = useProfile();
 
-  // Patch update helper
-  function handleAutoSave(field: string, value: string | string[] | number) {
-    updateCurrentUser({
-      technicalInfo: {
-        ...user.technicalInfo,
-        [field]: value,
-      },
-    });
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange"></div>
+      </div>
+    );
   }
 
-  // Role options
-  const roleOptions = [
-    { value: '', label: 'Select role' },
-    { value: 'Frontend Engineer', label: 'Frontend Engineer' },
-    { value: 'Backend Engineer', label: 'Backend Engineer' },
-    { value: 'Full Stack Developer', label: 'Full Stack Developer' },
-    { value: 'DevOps Engineer', label: 'DevOps Engineer' },
-    { value: 'Data Scientist', label: 'Data Scientist' },
-    { value: 'Product Manager', label: 'Product Manager' },
-  ];
-  
-  // Experience options (0-40)
-  const expOptions = [{ value: '', label: 'Select experience' }].concat(
-    Array.from({ length: 41 }, (_, i) => ({ value: i.toString(), label: `${i} years` }))
-  );
-  
-  // Skills as multi-select options
-  const skillOptionList = skillOptions.map((sk) => ({ value: sk, label: sk }));
-
-  // Controlled values
-  const [roleValue, setRoleValue] = useState(user.technicalInfo?.roleLookingFor || '');
-  const [expValue, setExpValue] = useState(
-    user.technicalInfo?.totalExperience?.toString() || ''
-  );
-  const [skillsValue, setSkillsValue] = useState<string[]>(user.technicalInfo?.skills || []);
-
-  // Sync form and autosave for selects
-  React.useEffect(() => {
-    setValue('roleLookingFor', roleValue);
-    handleAutoSave('roleLookingFor', roleValue);
-  }, [roleValue]);
-  
-  React.useEffect(() => {
-    setValue('totalExperience', expValue);
-    handleAutoSave('totalExperience', expValue ? Number(expValue) : '');
-  }, [expValue]);
-  
-  React.useEffect(() => {
-    setValue('skills', skillsValue);
-    handleAutoSave('skills', skillsValue);
-  }, [skillsValue]);
+  if (!user) {
+    return (
+      <div className="text-center py-12 text-text-secondary">
+        Failed to load profile data
+      </div>
+    );
+  }
 
   return (
-    <form className="space-y-6" autoComplete="off" onSubmit={e => e.preventDefault()}>
+    <div className="space-y-7">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Role Looking For */}
-        <RadixSelect
-          label="Job Role Looking For *"
-          value={roleValue}
-          onValueChange={setRoleValue}
-          options={roleOptions}
-          placeholder="Select role"
-          error={errors.roleLookingFor?.message as string}
-          className="w-full"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-text-primary mb-1">
+            Job Role Looking For
+          </label>
+          <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base text-text-primary">
+            {user.preferences?.jobRoles?.[0] || 'Not provided'}
+          </div>
+        </div>
         
         {/* Experience */}
-        <RadixSelect
-          label="Total Experience (Years)"
-          value={expValue}
-          onValueChange={setExpValue}
-          options={expOptions}
-          placeholder="Select experience"
-          className="w-full"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-text-primary mb-1">
+            Total Experience
+          </label>
+          <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base text-text-primary">
+            {user.preferences?.experience ? `${user.preferences.experience} years` : 'Not provided'}
+          </div>
+        </div>
       </div>
-      
-      {/* Skills Multi-Select */}
-      <RadixMultiSelect
-        label="Technical Skills"
-        options={skillOptionList}
-        values={skillsValue}
-        onValuesChange={setSkillsValue}
-        placeholder="Add a skill (e.g., React, Python)"
-        className="w-full md:w-1/2"
-      />
-      
-      {/* Chips for selected skills */}
-      <div className="flex flex-wrap gap-2 mt-3">
-        {skillsValue.map((skill: string) => (
-          <span
-            key={skill}
-            className="inline-flex items-center px-3 py-1 rounded-full border border-primary-orange bg-primary-orange/10 text-primary-orange font-medium text-sm"
-          >
-            {skill}
-            <button
-              type="button"
-              className="ml-2 text-primary-orange hover:text-red-600 focus:outline-none"
-              onClick={() => setSkillsValue(skillsValue.filter((s) => s !== skill))}
-              title="Remove"
-              aria-label={`Remove ${skill}`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </span>
-        ))}
+
+      <div>
+        <label className="block text-sm font-semibold text-text-primary mb-1">
+          Skills
+        </label>
+        <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base">
+          {user.preferences?.skills?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {user.preferences?.skills?.map((skill) => (
+                <span 
+                  key={skill} 
+                  className="px-3 py-1 bg-gray-200 text-text-primary rounded-full text-sm"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="text-text-secondary">No skills added</span>
+          )}
+        </div>
       </div>
-    </form>
+    </div>
   );
 }

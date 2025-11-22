@@ -23,22 +23,20 @@ export default function ProfessionalInfoTab() {
   }
 
   // Transform backend data to frontend structure
-  // Backend: linkedInUrl -> Frontend: linkedIn
-  // Backend: resumeUrl -> Frontend: resumeLink
-  // Backend: workExperience[0].companyName -> Frontend: currentCompany
-  // Backend: workExperience[0].yourCompanyEmail -> Frontend: companyEmail
-  // Portfolio might not exist in backend, check professionalInfo first
-  const linkedIn = user.linkedInUrl || user.professionalInfo?.linkedIn || '';
-  const resumeLink = user.resumeUrl || user.professionalInfo?.resumeLink || '';
-  const portfolio = user.professionalInfo?.portfolio || '';
-  const currentCompany = user.workExperience?.[0]?.companyName || user.professionalInfo?.currentCompany || '';
-  const companyEmail = user.workExperience?.[0]?.yourCompanyEmail || user.professionalInfo?.companyEmail || '';
+  // Using direct fields from user model
+  const linkedIn = user.linkedInUrl || '';
+  const resumeLink = user.resumeUrl || '';
+  // Using type assertion as portfolioUrl might not be in the User type yet
+  const portfolio = (user as any).portfolioUrl || '';
+  const currentCompany = user.workExperience?.[0]?.companyName || '';
+  const companyEmail = user.workExperience?.[0]?.yourCompanyEmail || '';
 
   function isValidUrl(str: string) {
     if (!str) return false;
     try { 
-      const u = new URL(str); 
-      return !!u; 
+      // Check if the URL has a valid protocol and domain
+      const url = new URL(str);
+      return url.protocol === 'http:' || url.protocol === 'https:';
     } catch { 
       return false; 
     }
@@ -89,15 +87,17 @@ export default function ProfessionalInfoTab() {
           Portfolio Website
         </label>
         <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base">
-          {portfolio && isValidUrl(portfolio) ? (
-            <a 
-              href={portfolio} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary-orange hover:underline"
-            >
-              {portfolio}
-            </a>
+          {portfolio ? (
+            <div className="flex items-center">
+              <a
+                href={portfolio.startsWith('http') ? portfolio : `https://${portfolio}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-orange hover:underline break-all"
+              >
+                {portfolio}
+              </a>
+            </div>
           ) : (
             <span className="text-text-secondary">Not provided</span>
           )}
