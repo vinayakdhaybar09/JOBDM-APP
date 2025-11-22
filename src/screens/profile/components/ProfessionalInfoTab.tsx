@@ -1,29 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { getCurrentUser, updateCurrentUser } from '@/lib/inMemoryStore';
+import React from 'react';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 export default function ProfessionalInfoTab() {
-  const user = getCurrentUser();
-  const [saved, setSaved] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    getValues,
-    formState: { errors, isDirty },
-  } = useForm({
-    defaultValues: {
-      currentCompany: user.professionalInfo?.currentCompany || '',
-      companyEmail: user.professionalInfo?.companyEmail || '',
-      linkedIn: user.professionalInfo?.linkedIn || '',
-      portfolio: user.professionalInfo?.portfolio || '',
-      resumeLink: user.professionalInfo?.resumeLink || '',
-    },
-  });
+  const { data: user, isLoading, isError } = useProfile();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange"></div>
+      </div>
+    );
+  }
+
+  if (isError || !user) {
+    return (
+      <div className="text-center py-8 text-red-600">
+        Failed to load profile data
+      </div>
+    );
+  }
+
+  // Transform backend data to frontend structure
+  // Backend: linkedInUrl -> Frontend: linkedIn
+  // Backend: resumeUrl -> Frontend: resumeLink
+  // Backend: workExperience[0].companyName -> Frontend: currentCompany
+  // Backend: workExperience[0].yourCompanyEmail -> Frontend: companyEmail
+  // Portfolio might not exist in backend, check professionalInfo first
+  const linkedIn = user.linkedInUrl || user.professionalInfo?.linkedIn || '';
+  const resumeLink = user.resumeUrl || user.professionalInfo?.resumeLink || '';
+  const portfolio = user.professionalInfo?.portfolio || '';
+  const currentCompany = user.workExperience?.[0]?.companyName || user.professionalInfo?.currentCompany || '';
+  const companyEmail = user.workExperience?.[0]?.yourCompanyEmail || user.professionalInfo?.companyEmail || '';
 
   function isValidUrl(str: string) {
+    if (!str) return false;
     try { 
       const u = new URL(str); 
       return !!u; 
@@ -31,117 +43,85 @@ export default function ProfessionalInfoTab() {
       return false; 
     }
   }
-  
-  function isValidLinkedIn(url: string) {
-    return /^https:\/\/([\w]+\.)?linkedin\.com\//.test(url.trim());
-  }
-
-  // Save handler
-  const onSubmit = (values: Record<string, string>) => {
-    updateCurrentUser({ professionalInfo: values as any });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    reset(values); // reset dirty
-  };
 
   return (
-    <form className="space-y-7" autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
+    <div className="space-y-7">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-text-primary mb-1">
-            Current Company <span className="font-normal text-text-tertiary">(Optional)</span>
+            Current Company
           </label>
-          <input
-            type="text"
-            className="mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary"
-            {...register('currentCompany')}
-            placeholder="e.g., Google, Microsoft"
-            autoComplete="organization"
-          />
+          <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base text-text-primary">
+            {currentCompany || 'Not provided'}
+          </div>
         </div>
         
         <div>
           <label className="block text-sm font-semibold text-text-primary mb-1">
-            Company Email <span className="font-normal text-text-tertiary">(Optional)</span>
+            Company Email
           </label>
-          <input
-            type="email"
-            className="mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary"
-            {...register('companyEmail')}
-            placeholder="your.name@company.com"
-            autoComplete="email"
-          />
+          <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base text-text-primary">
+            {companyEmail || 'Not provided'}
+          </div>
         </div>
       </div>
       
-      <div className="relative">
+      <div>
         <label className="block text-sm font-semibold text-text-primary mb-1">LinkedIn Profile URL</label>
-        <input
-          type="url"
-          className="mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary pr-8"
-          {...register('linkedIn')}
-          placeholder="https://linkedin.com/in/yourprofile"
-          autoComplete="url"
-        />
-        {isValidLinkedIn(getValues('linkedIn')) && (
-          <span className="absolute right-3 top-2.5">
-            <svg className="w-5 h-5 text-green-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          </span>
-        )}
+        <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base">
+          {linkedIn && isValidUrl(linkedIn) ? (
+            <a 
+              href={linkedIn} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-orange hover:underline"
+            >
+              {linkedIn}
+            </a>
+          ) : (
+            <span className="text-text-secondary">Not provided</span>
+          )}
+        </div>
       </div>
       
-      <div className="relative">
+      <div>
         <label className="block text-sm font-semibold text-text-primary mb-1">
-          Portfolio Website <span className="font-normal text-text-tertiary">(Optional)</span>
+          Portfolio Website
         </label>
-        <input
-          type="url"
-          className="mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary pr-8"
-          {...register('portfolio')}
-          placeholder="https://yourportfolio.com"
-          autoComplete="url"
-        />
-        {isValidUrl(getValues('portfolio')) && (
-          <span className="absolute right-3 top-2.5">
-            <svg className="w-5 h-5 text-green-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          </span>
-        )}
+        <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base">
+          {portfolio && isValidUrl(portfolio) ? (
+            <a 
+              href={portfolio} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-orange hover:underline"
+            >
+              {portfolio}
+            </a>
+          ) : (
+            <span className="text-text-secondary">Not provided</span>
+          )}
+        </div>
       </div>
       
-      <div className="relative">
+      <div>
         <label className="block text-sm font-semibold text-text-primary mb-1">Resume Link (Google Drive/Dropbox)</label>
-        <input
-          type="url"
-          className="mt-1 w-full autofill:!bg-white rounded-lg border border-border py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-primary-orange text-base placeholder:text-text-tertiary pr-8"
-          {...register('resumeLink')}
-          placeholder="https://drive.google.com/file/d/..."
-          autoComplete="url"
-        />
-        {isValidUrl(getValues('resumeLink')) && (
-          <span className="absolute right-3 top-2.5">
-            <svg className="w-5 h-5 text-green-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          </span>
-        )}
-        <p className="text-xs mt-2 text-primary-orange/90">Share a public link to your resume for email attachments</p>
+        <div className="mt-1 w-full rounded-lg border border-border py-2.5 px-4 bg-gray-50 text-base">
+          {resumeLink && isValidUrl(resumeLink) ? (
+            <a 
+              href={resumeLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-orange hover:underline"
+            >
+              {resumeLink}
+            </a>
+          ) : (
+            <span className="text-text-secondary">Not provided</span>
+          )}
+        </div>
+        <p className="text-xs mt-2 text-text-secondary">Share a public link to your resume for email attachments</p>
       </div>
-      
-      <div className="flex justify-end mt-8">
-        <button 
-          type="submit" 
-          className={`bg-primary-orange text-white px-6 py-2 rounded-lg font-bold shadow transition min-w-[130px] flex items-center justify-center ${
-            !isDirty ? 'bg-opacity-60 pointer-events-none' : ''
-          }`} 
-          disabled={!isDirty}
-        >
-          {saved ? 'Saved!' : 'Save Changes'}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }
